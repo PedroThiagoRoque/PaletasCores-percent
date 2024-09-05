@@ -1,7 +1,5 @@
-import tkinter as tk
-from tkinter import filedialog
-from tkinter import messagebox
-from tkinter import ttk
+import customtkinter as ctk
+from tkinter import filedialog, messagebox, Toplevel
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 from collections import Counter
 import numpy as np
@@ -9,6 +7,11 @@ from datetime import datetime
 import math
 from sklearn.cluster import KMeans
 import os
+import threading
+
+# Configuração inicial do CustomTkinter
+ctk.set_appearance_mode("System")  # Segue o tema do sistema (light/dark)
+ctk.set_default_color_theme("blue")  # Tema padrão
 
 # Função para converter RGB para HEX
 def rgb_to_hex(rgb_color):
@@ -79,42 +82,75 @@ def load_image():
         image_label.image = img
         messagebox.showinfo("Imagem carregada", "Imagem carregada com sucesso!")
 
-# Função para gerar a imagem
+# Função para mostrar popup de carregamento
+def show_loading_popup():
+    loading_popup = Toplevel(app)
+    loading_popup.title("Processando...")
+    loading_popup.geometry("200x100")
+    loading_popup.grab_set()  # Bloqueia interação com a janela principal
+    
+    loading_label = ctk.CTkLabel(loading_popup, text="Gerando imagem...\nAguarde.", font=("Arial", 14))
+    loading_label.pack(pady=20)
+
+    return loading_popup
+
+# Função que roda o processo em segundo plano
+def generate_image_in_background(loading_popup):
+    try:
+        num_colors = int(color_entry.get())
+        color_percentages = get_image_colors(image_path, num_colors)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_image_path = f"output_image_{timestamp}.jpg"
+        draw_color_circles(image_path, color_percentages, output_image_path)
+        loading_popup.destroy()  # Fecha o popup de loading
+        messagebox.showinfo("Imagem gerada", f"Imagem gerada e salva em {output_image_path}")
+    except Exception as e:
+        loading_popup.destroy()  # Fecha o popup de loading em caso de erro
+        messagebox.showerror("Erro", f"Falha ao gerar a imagem: {str(e)}")
+
+# Função principal para gerar a imagem com o popup de loading
 def generate_image():
     if not image_path:
         messagebox.showerror("Erro", "Nenhuma imagem foi selecionada.")
         return
-    num_colors = int(color_entry.get())
-    color_percentages = get_image_colors(image_path, num_colors)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_image_path = f"output_image_{timestamp}.jpg"
-    draw_color_circles(image_path, color_percentages, output_image_path)
-    messagebox.showinfo("Imagem gerada", f"Imagem gerada e salva em {output_image_path}")
+    
+    # Mostrar popup de carregamento
+    loading_popup = show_loading_popup()
+    
+    # Criar e rodar thread para evitar bloqueio da UI
+    threading.Thread(target=generate_image_in_background, args=(loading_popup,)).start()
 
-# Interface gráfica
-root = tk.Tk()
-root.title("Gerador de Paleta de Cores")
-root.geometry("400x400")
+# Interface gráfica com CustomTkinter
+app = ctk.CTk()
+app.title("Gerador de Paleta de Cores")
+app.geometry("500x500")
 
 image_path = None
 
+# Título
+title_label = ctk.CTkLabel(app, text="Gerador de Paleta de Cores", font=("Arial", 20))
+title_label.pack(pady=20)
+
 # Botão para selecionar imagem
-select_image_btn = tk.Button(root, text="Selecionar Imagem", command=load_image)
+select_image_btn = ctk.CTkButton(app, text="Selecionar Imagem", command=load_image)
 select_image_btn.pack(pady=10)
 
 # Label para mostrar a imagem carregada
-image_label = tk.Label(root)
+image_label = ctk.CTkLabel(app)
 image_label.pack(pady=10)
 
 # Entrada para número de cores
-tk.Label(root, text="Número de Cores:").pack(pady=10)
-color_entry = tk.Entry(root)
+color_frame = ctk.CTkFrame(app)
+color_frame.pack(pady=10)
+color_label = ctk.CTkLabel(color_frame, text="Número de Cores:", font=("Arial", 14))
+color_label.grid(row=0, column=0, padx=10)
+color_entry = ctk.CTkEntry(color_frame)
 color_entry.insert(0, "10")  # Valor padrão
-color_entry.pack(pady=10)
+color_entry.grid(row=0, column=1)
 
 # Botão para gerar a imagem
-generate_image_btn = tk.Button(root, text="Gerar Imagem", command=generate_image)
+generate_image_btn = ctk.CTkButton(app, text="Gerar Imagem", command=generate_image)
 generate_image_btn.pack(pady=20)
 
 # Loop da interface
-root.mainloop()
+app.mainloop()
