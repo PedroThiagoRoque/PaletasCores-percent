@@ -45,7 +45,7 @@ Clique no botão "Gerar Imagem" para gerar e salvar a imagem contendo a paleta d
 Um popup de carregamento será exibido durante o processamento e, ao final, uma mensagem será mostrada informando o local onde a imagem foi salva.
 
 ## Exemplo de Uso
+![Alt text](/exemplo.png?raw=true "Exemplo")
 
-<sub>Exemplo de interface gráfica.</sub>
 
 Ao carregar uma imagem, você verá uma versão reduzida dela na interface, e ao gerar a paleta de cores, uma nova imagem será salva no diretório de execução.
