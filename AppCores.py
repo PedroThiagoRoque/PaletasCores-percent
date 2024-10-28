@@ -53,7 +53,7 @@ def draw_color_circles(image_path, color_percentages, output_image_path):
     rows = math.ceil(num_colors / columns)
     max_circle_diameter = min(image_width // (columns + 1), image_height // (rows + 1)) - 30
     min_circle_diameter = max_circle_diameter // 2
-    font = ImageFont.load_default()
+    font = ImageFont.load_default(22) #aumentar a fonte
     x_margin = image_width // (columns + 1)
     y_margin = image_height // (rows + 1)
     
